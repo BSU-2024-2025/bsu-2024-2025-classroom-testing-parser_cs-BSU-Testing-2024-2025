@@ -89,7 +89,8 @@ public static class Parser
         curIndex = 0;
         try
         {
-            var result = ParseExpr();
+            // var result = ParseExpr();
+            var result = ParseOperators();
             if (IsNotEnd())
             {
                 return false;
@@ -100,6 +101,16 @@ public static class Parser
         {
             return false;
         }
+    }
+
+    public static bool ParseOperators()
+    {
+        ParseAssign()
+    }
+
+    public static bool ParseAssign()
+    {
+
     }
 
     public static bool ParseExpr()
@@ -131,6 +142,13 @@ public static class Parser
             }
             return true;
         }
+        else
+        {
+            if (ParseVar())
+            {
+                return true;
+            }
+        }
 
         if (ParseChar((char)Operation.LeftBracket))
         {
@@ -143,6 +161,37 @@ public static class Parser
             }
 
             return false;
+        }
+
+        return false;
+    }
+
+    public static bool ParseVar()
+    {
+        Skip();
+
+        var prevInd = curIndex;
+
+
+        if (!IsNotEnd() || !(char.IsAsciiLetter(GetCurrentChar()) || GetCurrentChar() == '_'))
+        {
+            return false;
+        }
+
+        while (IsNotEnd() && (char.IsAsciiLetterOrDigit(GetCurrentChar()) || GetCurrentChar() == '_'))
+        {
+            curIndex++;
+        }
+
+        if (curIndex > prevInd)
+        {
+            var name = expression[prevInd..(curIndex - 1)];
+            if (Variable.GetVariable(name) is null)
+            {
+                throw new ApplicationException($"Variable not found: {name}");
+            }
+
+            return true;
         }
 
         return false;
