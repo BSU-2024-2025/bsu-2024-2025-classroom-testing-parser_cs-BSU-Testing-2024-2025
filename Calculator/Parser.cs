@@ -105,13 +105,55 @@ public static class Parser
 
     public static bool ParseOperators()
     {
-        ParseAssign()
+        ParseAssign();
     }
 
     public static bool ParseAssign()
     {
+        var name = ParseName();
+        if (name == "")
+        {
+            return false;
+        }
 
+        if (!ParseChar('='))
+        {
+            return false;
+        }
+
+        ParseExpr();
+
+        if (!ParseChar(';'))
+        {
+            throw new ApplicationException("Error");
+        }
     }
+
+    public static string ParseName()
+    {
+        Skip();
+
+        var prevInd = curIndex;
+
+
+        if (!IsNotEnd() || !(char.IsAsciiLetter(GetCurrentChar()) || GetCurrentChar() == '_'))
+        {
+            return "";
+        }
+
+        while (IsNotEnd() && (char.IsAsciiLetterOrDigit(GetCurrentChar()) || GetCurrentChar() == '_'))
+        {
+            curIndex++;
+        }
+
+        if (curIndex > prevInd)
+        {
+            return expression[prevInd..(curIndex - 1)];
+        }
+
+        return "";
+    }
+
 
     public static bool ParseExpr()
     {
@@ -196,6 +238,8 @@ public static class Parser
 
         return false;
     }
+
+
 
 
     public static bool ParseNum(out decimal? a)

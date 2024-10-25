@@ -6,9 +6,9 @@ namespace Calculator;
 public class Variable
 {
 
-    public static Dictionary<string, object> variables = new();
+    public static Dictionary<string, object?> variables = new();
 
-    public static void AddVariable(string name, object value)
+    public static void SetVariable(string name, object value)
     {
         if (variables.ContainsKey(name))
         {
@@ -17,6 +17,14 @@ public class Variable
         else
         {
             variables.Add(name, value);
+        }
+    }
+
+    public static void AddVariable(string name)
+    {
+        if (!variables.ContainsKey(name))
+        {
+            variables.Add(name, null);
         }
     }
 
