@@ -10,9 +10,9 @@ public static class Parser
         Console.WriteLine(Parser.Parse("1+2"));
     }
 
-    private static string expression;
-
+    private static string expression = "";
     private static int curIndex;
+    private static object? result = null;
 
     public static bool IsBinaryOperation(char s)
     {
@@ -57,25 +57,47 @@ public static class Parser
         }
     }
 
-    public static decimal Compile(string s)
+    public static object? CompileExpression(string s)
     {
         expression = s;
         curIndex = 0;
         try
         {
-            var result = ParseExpr();
+            var res = ParseExpr();
             if (IsNotEnd())
             {
                 return 555;
             }
 
-            if (!result)
+            if (!res)
             {
                 return 222;
             }
 
-            Compiler.ExecuteMany((char)Operation.End);
             return Compiler.GetResult();
+        }
+        catch (Exception)
+        {
+            return 333;
+        }
+    }
+
+    public static object? Compile(string s)
+    {
+        expression = s;
+        curIndex = 0;
+        try
+        {
+            var res = ParseOperators();
+            if (IsNotEnd() && result == null)
+            {
+                return 555;
+            }
+            if (!res)
+            {
+                return 222;
+            }
+            return result;
         }
         catch (Exception)
         {
@@ -89,13 +111,31 @@ public static class Parser
         curIndex = 0;
         try
         {
-            // var result = ParseExpr();
-            var result = ParseOperators();
+            var res = ParseOperators();
             if (IsNotEnd())
             {
                 return false;
             }
-            return result;
+            return res;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    public static bool ParseExpression(string s)
+    {
+        expression = s;
+        curIndex = 0;
+        try
+        {
+            var res = ParseExpr();
+            if (IsNotEnd())
+            {
+                return false;
+            }
+            return res;
         }
         catch (Exception)
         {
@@ -105,7 +145,20 @@ public static class Parser
 
     public static bool ParseOperators()
     {
-        ParseAssign();
+        while (IsNotEnd())
+        {
+            if (ParseReturn())
+            {
+                return true;
+            }
+            ParseAssign();
+        }
+        if (!IsNotEnd())
+        {
+            return true;
+        }
+
+        return false;
     }
 
     public static bool ParseAssign()
@@ -125,8 +178,37 @@ public static class Parser
 
         if (!ParseChar(';'))
         {
-            throw new ApplicationException("Error");
+            throw new ParserException("Error");
         }
+
+        Variable.AddVariable(name);
+        Variable.SetVariable(name, Compiler.GetResult());
+
+        return true;
+    }
+
+    public static bool ParseReturn()
+    {
+        if (!ParseString("return"))
+        {
+            return false;
+        }
+
+        if (ParseChar(';'))
+        {
+            result = 0;
+            return true;
+        }
+
+        ParseExpr();
+
+        if (!ParseChar(';'))
+        {
+            throw new ParserException("Error");
+        }
+
+        result = Compiler.GetResult();
+        return true;
     }
 
     public static string ParseName()
@@ -148,7 +230,7 @@ public static class Parser
 
         if (curIndex > prevInd)
         {
-            return expression[prevInd..(curIndex - 1)];
+            return expression[prevInd..curIndex];
         }
 
         return "";
@@ -171,16 +253,17 @@ public static class Parser
             }
         }
 
+        Compiler.ExecuteMany((char)Operation.End);
         return true;
     }
 
     public static bool ParseOperand()
     {
-        if (ParseNum(out decimal? a))
+        if (ParseNum(out object? a))
         {
             if (a != null)
             {
-                Compiler.PushNumber((decimal)a);
+                Compiler.PushNumber(a);
             }
             return true;
         }
@@ -210,39 +293,26 @@ public static class Parser
 
     public static bool ParseVar()
     {
-        Skip();
-
-        var prevInd = curIndex;
-
-
-        if (!IsNotEnd() || !(char.IsAsciiLetter(GetCurrentChar()) || GetCurrentChar() == '_'))
+        var name = ParseName();
+        if (name == "")
         {
             return false;
         }
 
-        while (IsNotEnd() && (char.IsAsciiLetterOrDigit(GetCurrentChar()) || GetCurrentChar() == '_'))
+        if (!Variable.HasVariable(name))
         {
-            curIndex++;
+            throw new ParserException($"Variable not found: {name}");
         }
 
-        if (curIndex > prevInd)
-        {
-            var name = expression[prevInd..(curIndex - 1)];
-            if (Variable.GetVariable(name) is null)
-            {
-                throw new ApplicationException($"Variable not found: {name}");
-            }
+        Compiler.PushNumber(Variable.GetVariable(name));
 
-            return true;
-        }
-
-        return false;
+        return true;
     }
 
 
 
 
-    public static bool ParseNum(out decimal? a)
+    public static bool ParseNum(out object? a)
     {
         Skip();
 
@@ -266,6 +336,19 @@ public static class Parser
         if (IsNotEnd() && GetCurrentChar().Equals(symbol))
         {
             curIndex++;
+            return true;
+        }
+
+        return false;
+    }
+
+    public static bool ParseString(string str)
+    {
+        Skip();
+
+        if (curIndex + str.Length < expression.Length && expression.Substring(curIndex, str.Length).Equals(str))
+        {
+            curIndex += str.Length;
             return true;
         }
 

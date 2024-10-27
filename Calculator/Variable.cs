@@ -1,14 +1,11 @@
-using System;
-using System.Collections;
-
 namespace Calculator;
 
-public class Variable
+public static class Variable
 {
 
-    public static Dictionary<string, object?> variables = new();
+    private static readonly Dictionary<string, object?> variables = new();
 
-    public static void SetVariable(string name, object value)
+    public static void SetVariable(string name, object? value)
     {
         if (variables.ContainsKey(name))
         {
@@ -35,5 +32,11 @@ public class Variable
             return null;
         }
         return variables[name];
+    }
+
+
+    public static bool HasVariable(string name)
+    {
+        return variables.ContainsKey(name);
     }
 }

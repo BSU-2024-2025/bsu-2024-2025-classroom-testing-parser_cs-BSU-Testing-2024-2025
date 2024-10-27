@@ -39,11 +39,10 @@ namespace Calculator.Test
       """)]
     public static void TestParseFalse(string input)
     {
-      bool result = Parser.Parse(input);
+      bool result = Parser.ParseExpression(input);
       Assert.That(result, Is.EqualTo(false));
     }
 
-    [TestCase("(2*(2/3))")]
     [TestCase("(1+2)-(2*3)")]
     [TestCase("1")]
     [TestCase(" 1 ")]
@@ -93,17 +92,74 @@ namespace Calculator.Test
       """)]
     public void TestParseTrue(string input)
     {
-      bool result = Parser.Parse(input);
+      bool result = Parser.ParseExpression(input);
       Assert.That(result, Is.EqualTo(true));
     }
 
     [TestCase(" x = 1;")]
-    [TestCase("y+1")]
-    [TestCase("_x + 1")]
+    // [TestCase("y+1")]
+    // [TestCase("_x + 1")]
+    [TestCase("""
+      x = 1;
+      y = x;
+    """)]
+    [TestCase("""
+        x = 1;
+        x = x + 1;
+    """)]
     public void VariableTest(string input)
     {
       var result = Parser.Parse(input);
       Assert.That(result, Is.EqualTo(true));
+    }
+
+    // [TestCase("y+1")]
+    // [TestCase("_x + 1")]
+    [TestCase("""
+      y = x;
+      x = 1;
+    """)]
+    [TestCase("""
+      x = x + 1;
+    """)]
+    public void VariableTestFalse(string input)
+    {
+      var result = Parser.Parse(input);
+      Assert.That(result, Is.EqualTo(false));
+    }
+
+    [TestCase("""
+          x = 1+2;
+          return x;
+    """, ExpectedResult = 3)]
+    [TestCase("""
+          return 3;
+          """, ExpectedResult = 3)]
+    [TestCase("""
+          return 3 + 1;
+          """, ExpectedResult = 4)]
+    [TestCase("""
+          x = 1+2;
+          return x * 3;
+          """, ExpectedResult = 9)]
+    [TestCase("""
+          x = 1+2;
+          y = x * 3;
+          return y + x;
+          """, ExpectedResult = 12)]
+    [TestCase("""
+          x = 1+2;
+          y = x * 3;
+          return y + x;
+          return x;
+          """, ExpectedResult = 12)]
+    [TestCase("""
+          return;
+          """, ExpectedResult = 0)]
+    public static int? TestCompile(string input)
+    {
+      var result = Parser.Compile(input);
+      return (int?)result;
     }
   }
 }

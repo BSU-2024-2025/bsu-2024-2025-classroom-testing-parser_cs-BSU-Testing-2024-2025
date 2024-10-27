@@ -6,14 +6,13 @@ public static class Compiler
 {
 
     private static readonly Stack<Operation> operations = new();
-    private static readonly Stack<decimal> data = new();
+    private static readonly Stack<object?> data = new();
 
 
-    public static void PushNumber(decimal number)
+    public static void PushNumber(object? number)
     {
         data.Push(number);
     }
-
 
     public static void PushOperation(char symbol)
     {
@@ -42,7 +41,7 @@ public static class Compiler
         }
     }
 
-    public static decimal PopNumber()
+    public static object? PopNumber()
     {
         return data.Pop();
     }
@@ -54,7 +53,7 @@ public static class Compiler
     }
 
 
-    public static decimal GetResult()
+    public static object? GetResult()
     {
         return PopNumber();
     }
@@ -65,19 +64,19 @@ public static class Compiler
         switch (op)
         {
             case Operation.Add:
-                PushNumber(PopNumber() + PopNumber());
+                PushNumber((int?)PopNumber() + (int?)PopNumber());
                 break;
             case Operation.Subtract:
-                PushNumber(-PopNumber() + PopNumber());
+                PushNumber(-(int?)PopNumber() + (int?)PopNumber());
                 break;
             case Operation.Multiply:
-                PushNumber(PopNumber() * PopNumber());
+                PushNumber((int?)PopNumber() * (int?)PopNumber());
                 break;
             case Operation.Divide:
-                PushNumber(1 / PopNumber() * PopNumber());
+                PushNumber(1 / (int?)PopNumber() * (int?)PopNumber());
                 break;
             case Operation.UnaryMinus:
-                PushNumber(-PopNumber());
+                PushNumber(-(int?)PopNumber());
                 break;
             default:
                 break;
