@@ -19,6 +19,9 @@ public static class Variable
 
     public static void AddVariable(string name)
     {
+    int zzz = 1;
+
+
         if (!variables.ContainsKey(name))
         {
             variables.Add(name, null);
@@ -38,5 +41,9 @@ public static class Variable
     public static bool HasVariable(string name)
     {
         return variables.ContainsKey(name);
+    }
+    public static void ClearVariables() 
+    { 
+        variables.Clear(); 
     }
 }
